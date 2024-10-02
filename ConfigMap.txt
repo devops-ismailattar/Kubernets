@@ -1,0 +1,48 @@
+################# Config Map ###########################
+
+First check avalible configmap 
+
+$ kubectl get configmap
+
+now create a configmap using litrel way 
+
+$  kubectl create configmap <<config name>> --from-literal=(config value)app.name=localApp
+
+$ $ kubectl get configmap
+
+
+Now lets create a configmap using file refrence as below
+
+$ vim configmap
+
+$ kubectl create configmap <<name>> --from-file=fileName
+
+$ kubectl get configmap
+
+now mount the configmap inside the container
+
+vim configmap-pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: configmap
+spec:
+  containers:
+  - name: config-map
+    image: nginx
+    volumeMounts:
+    - name: config-vol
+      mountPath: "/app-data"
+  volumes:
+  - name: config-vol
+    configMap:
+      name: config-1
+
+$ kubectl create -f file.yaml
+
+now connect to container 
+
+$ kubectl exec -it configmap bash
+
+now you will se inside container app-data dir , enter in dir and cat to configmap

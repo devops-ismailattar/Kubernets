@@ -1,0 +1,79 @@
+#################### Authentication ############
+
+######### Authentication using tokens #########
+
+create a service account 
+
+$ kubectl create sa <<service name>>
+
+now create a pod and assign SA to it 
+
+vim pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: nginx-pod
+  name: nginx-pod
+spec:
+  serviceAccountName: <<SA name>>
+  containers:
+  - image: nginx
+    name: nginx-pod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+~
+
+$ kubectl create -f nginx.yaml
+
+$  kubectl get pod
+
+validate service account is assigned to pod 
+
+$ kubectl describe pod nginx-pod
+
+connect to the pod 
+
+$ kubectl exec -it nginx-pod -- bash
+
+go to the path 
+
+$ cd /run/secrets/kubernetes.io/serviceaccount
+
+list all the avalible files 
+
+$ cat token 
+
+copy the entire token , go to url https://token.dev/ and decode the tocken , and there you will be see all the details 
+
+now lets connect to cluster using token 
+
+try connecting without token first 
+
+$ curl -k https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1
+
+
+you will get error 
+
+
+now lets connect with token 
+
+$  curl -k https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1 --header "Authorization: Bearer <<token>>"
+
+this time you will be connected to cluster 
+
+
+
+
+
+
+
+
+
+
+
+

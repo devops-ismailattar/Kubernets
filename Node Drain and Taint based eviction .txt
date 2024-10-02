@@ -1,0 +1,99 @@
+####################### Node Drain ###########################
+
+Create a deployment running on a specific node
+
+
+then check the assign node to that deployment and drain that node 
+
+$  kubectl drain <<Node-Name>>  --ignore-daemonsets --delete-local-data
+
+All the pods running on this node will be evicted and sceduled to another node, check
+
+$ kubectl get node
+
+now you can do maintance of that node and once done , you need to oncorden that node
+
+$ kubectl uncordon <<Node-Name>>
+
+
+
+######################## Taint Based Eviction ####################################################
+
+$ kubectl get node
+
+loogin to any of the worker node and stop kubelet (pod must be running on that node)
+
+go to master node check node status you will see that worker node will be in not ready state 
+
+$ kubectl get node
+
+unreachable:NoExecute and unreachable:NoSchedule taints will be assigned to that node automatically 
+
+$ kubectl describe node <<node name>>
+
+$ kubectl get pod (but u will see pod still in running state on that same node. this is becuse the tollaration time by default for each pod is 300sec)
+
+check that 
+
+$ kubectl describe pod <<pod name>>
+
+After 300sec that pod will be terminated and recrated on another avaliblle node
+
+# now you can change this tollaraion time as per your requirment to avoid that long outage 
+
+$ vim file.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nginx
+  name: nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+        resources: {}
+
+      tolerations:
+      - key: "node.kubernetes.io/not-ready"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 2
+      - key: "node.kubernetes.io/unreachable"
+        operator: "Exists"
+        effect: "NoExecute"
+        tolerationSeconds: 2
+
+	
+$ kubectl create -f file.yaml
+
+$ kubectl get pod -o wide
+
+shutdown the node on which pod is deployed then you will see with just 2 sec a new pod will be created and sceduled to new node
+
+$ kubectl get pod -o wide 
+
+
+
+
+
+
+
+
+
+
+
+

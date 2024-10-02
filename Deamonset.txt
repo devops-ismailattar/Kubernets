@@ -1,0 +1,36 @@
+##################################### DEAMONSETS ####################
+
+Create a manifest
+
+$ vim deamonsets.yaml
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: unit
+  labels:
+spec:
+  selector:
+    matchLabels:
+      name: my-deamonset
+  template:
+    metadata:
+      labels:
+        name: my-deamonset
+    spec:
+      containers:
+      - name: unit
+        image: unit
+
+create a deamonset using below command
+
+$ kubectl create -f deamonsets.yaml
+
+check the pods 
+
+$ kubectl get pod 
+
+now add a new worked node to cluster and see that new worker-node will have same pod deployed 
+
+$ kubectl get pod 
+

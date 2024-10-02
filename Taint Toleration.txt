@@ -1,0 +1,89 @@
+######## Taint and Tollaration ############$
+
+check the nodes first and verify no taints availible on nodes
+
+$ kubectl get nodes
+
+$ kubectl describe node <<node-name>>
+
+Now taint the node
+
+$ kubectl taint node  <<node-name>> key=value:NoSchedule
+
+check taint is done 
+
+$ kubectl describe node <<node-name>>
+
+now lets create pods and seef if the are getting sceduled on that node or not
+
+$ kubectl create deployment nginx-depl --image=nginx --replicas=4
+
+now check all the pods will be assigned to untained node only
+
+$ kubectl get pod -o wide
+
+Now lets deploy pod on taint node
+
+$ vim tolerations.yaml
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  creationTimestamp: null
+  labels:
+    app: nginx-app
+  name: nginx-app
+spec:
+  replicas: 6
+  selector:
+    matchLabels:
+      app: nginx-app
+  strategy: {}
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: nginx-app
+    spec:
+      containers:
+      - image: nginx
+        name: nginx
+      tolerations:
+      - key: "key"
+        operator: "Exists"
+        effect: "NoSchedule"
+
+		
+$ kubectl create -f tolerations.yaml
+
+$ kubectl get pod
+
+you will see this time pod deployed on taint node as well (FYI -POD WILL BE DEPLOYED ON UNTAINED NODE AS WELL)
+
+$ kubectl get pod -o wide 
+
+
+to remove taint from node
+
+kubectl taint node <<Node name>>  key=value:NoSchedule-
+
+
+
+######################### APPLY TAINT WITH key=value:NoExecute ###################
+
+
+ 
+
+$ kubectl taint node <<NODE NAME>> key=value:NoExecute
+
+YOU WILL SEE THAT THE OLD PODS WITH NO TOLLERATION WILL BE MIGRATED TO ANOTHER NODE 
+
+
+
+
+
+	
+
+
+
+

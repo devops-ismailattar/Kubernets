@@ -1,0 +1,127 @@
+
+                                        ################Node affinity ###################
+										
+#######Schedule a Pod using required node affinity######################
+
+check the avalible nodes
+
+$ kubectl get nodes
+
+Add label to any of the node like SSD
+
+$ kubectl label node worker-node disk=ssd
+
+check label is assigned 
+
+$ kubectl get node -l disk=ssd
+
+Create manifest with vim
+
+vim affinity.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: disk
+            operator: In # (OPRATOR HELPS TO INCLUDE OR EXCLUDE KEY VALU , FOR EXAMPLE IF YOU USE operator: NotIn , THEN IT WILL ASSIGN POD TO THE NODE
+            values:      # WHICH DOES NOT HAVE phd LABEL
+            - phd
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+	
+$ kubectl create -f affinity.yaml
+
+check pod will created 
+
+$ kubectl get pod
+
+then check the pod will be asssigned to the perticuler node which has ssd label
+
+$ kubectl get pod -o wide
+
+Now do make a typo in key-value spec manifest as disk----pcd or any not exist label , and try creating affinity , you will see that pod will not be sceduled
+
+
+vim affinity.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  affinity:
+    nodeAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        nodeSelectorTerms:
+        - matchExpressions:
+          - key: disk
+            operator: In
+            values:
+            - lpdsdassss
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+	
+$ kubectl create -f affinity.yaml
+
+check details of the prod 
+
+$ kubectl describe pod nginx (check the logs at bottom)
+
+
+##########################Schedule a Pod using preferred node affinity#################
+
+IN preferred node affinity EVEN IF KEY VALUE IS NOT PRESENT TO THE NODE , THE K8S WILL STILL DEPLOY POD 
+
+Create manifest with vim
+
+$ vim preferred-node-affinity.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+spec:
+  affinity:
+    nodeAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+      - weight: 1
+        preference:
+          matchExpressions:
+          - key: disk
+            operator: In
+            values:
+            - pped
+  containers:
+  - name: nginx
+    image: nginx
+    imagePullPolicy: IfNotPresent
+
+ABOVE YOU WILL SEE I HAVE CHANGED THE KEY VALUE WHICH DOES NOT EVEN EXIST , LIKE LABEL disk=pped IS NOT ASSIGNED TO ANY LABEL
+
+$ kubectl create -f preferred-node-affinity.yaml
+
+check k8s will deploy pod to any default node and not give any error
+
+$ kubectl get pod -o wide
+
+$ kubectl get node -o wide
+
+
+
+
+
+
+
+
+

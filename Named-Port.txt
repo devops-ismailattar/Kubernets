@@ -1,0 +1,64 @@
+################# Named Port ################
+
+create a pod with port 
+
+$  kubectl run pod1 --image=nginx --port=80
+
+$  kubectl get pod
+
+Create a service for above pod using port name 
+
+kubectl expose pod pod1 --name <<svc name>> --port=80 --target-port=<<port name> --type=NodePort
+
+$  kubectl get svc 
+
+now try accessing the application 
+
+$ curl 3.86.106.67:32645 (it will not connect)
+
+now do one thing , create a new pod 
+
+$ kubectl run pod2 --image=nginx --port=80 --dry-run=client -o yaml
+
+$ vim pod2.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: pod2
+  name: pod2
+spec:
+  containers:
+  - image: nginx
+    name: pod2
+    ports:
+    - containerPort: 80
+      name: ismail
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+
+$ kubectl create -f  pod2.yaml
+
+
+
+create service for same pod  and this time use port name as target port
+
+$ kubectl expose pod pod2 --name svc2 --port=80 --target-port=ismail --type=NodePort
+
+$  kubectl get svc 
+
+check the endpoint of service you will see that service is rounted to the pod2
+
+$ kubectl describe svc svc2 
+
+
+
+
+
+
+

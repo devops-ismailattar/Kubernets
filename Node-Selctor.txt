@@ -1,0 +1,47 @@
+################# Node selector (Basically used when you want to deploy pod on specific node ###################
+
+Assign Label to nodes , Assign 2 same disk label to 2 nodes and 1 diffrent to last node
+
+$ kubectl describe node ip-172-31-40-195  (check label in label section of output)
+
+$ kubectl label node ip-172-31-35-76 disk=ssd
+
+$ kubectl label node ip-172-31-35-7 disk=hhd
+
+$ kubectl label node ip-172-31-35-76 disk=ssd
+
+
+check the labels 
+
+$ kubectl describe node ip-172-31-40-195  (check label in label section of output)
+
+
+Create a Node-selctor menifest 
+
+$ vim node-selctor.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nginx
+  labels:
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  nodeSelector:
+    disk: ssd
+
+
+$ kubectl create -f node-selctor.yaml
+
+now check pod will be created 
+
+$ kubectl get pod
+
+then check pod will be assigned to the perticular node which has SSD label
+
+$ kubectl get pod -o wide
+
+
+

@@ -1,0 +1,27 @@
+######################## NAMESPACE ############
+
+to check all the namespace avalible in cluster 
+
+$ kubectl get namespace
+
+to check pods from a perticular namespace
+
+$ kubectl get pod/deployment/rs -n <<namespace name>>
+
+create a namespace 
+
+$ kubectl create namespace <<namespace name>>
+
+$ kubectl get namespace
+
+to create a pod/deployment/rs in specific namespace 
+
+$ kubectl run nginx --image=nginx -n <<namespace name>>
+
+check pod will be created in that namespace
+
+$ kubectl get pod/deployment/rs -n <<namespace name>>
+
+
+
+

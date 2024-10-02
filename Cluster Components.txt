@@ -1,0 +1,9 @@
+###################### Verify Cluster Components ############
+
+$ kubectl get componentstatus
+
+Verify cluster information dump
+
+$ kubectl cluster-info
+
+To further debug and diagnose cluster problems, use $ kubectl cluster-info dump

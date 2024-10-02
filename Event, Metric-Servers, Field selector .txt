@@ -1,0 +1,56 @@
+
+##################### EVENTS #########################
+
+To check all the evens in defauls NS 
+
+$ kubectl get events
+
+Lets create a pod and then check the events
+
+$ kubectl run pod1  --image=nginx
+
+$ kubectl get events
+
+######################## field-selector ###########################
+
+lets List all the PODS from All Namespaces
+
+$ kubectl get pods --all-namespaces
+
+Now if you want to List all PODS from ALL namespaces except default namespace run below command 
+
+$ kubectl get pods --all-namespaces  --field-selector metadata.namespace!=default
+
+You can List all Pods from ALL namespace except a specific POD
+
+$ kubectl get pods --all-namespaces --field-selector metadata.name!=<ADD-POD-NAME-HERE>
+
+
+If you want to see the events of a sepcific pods you can do that using below filed selctor command
+
+$ kubectl get events --field-selector involvedObject.name=<<Pod name>>
+
+
+########################################### METRIC SERVER ################################
+
+check top command are working or not
+
+$ kubectl top pod
+
+$ kubectl top node
+
+you need to install metric server 
+
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+
+after installation check metric server is install 
+
+$ kubectl get deployment metrics-server -n kube-system
+
+
+then try to run below monitoring command
+
+$ kubectl top pod
+
+$ kubectl top nodea

@@ -1,0 +1,121 @@
+######################## VOLUME #############################
+
+Create a volume using yaml 
+
+$ vim volume.yaml 
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-vol
+spec:
+  containers:
+  - name: nginx-con1
+    image: nginx
+    volumeMounts:
+    - mountPath: /my-data
+      name: test-volume
+  volumes:
+  - name: test-volume
+    hostPath:
+      path: /etc # directory location on host
+      type: Directory # this field is optional
+
+
+
+$ kubectl create -f volume.yaml
+
+now connect to the container
+
+$ kubectl get pod
+
+kubectl exec -it hostpath-vol -- bash
+
+you will see volument mount will be reflecting in container too, and whatever change you make any of the side , it will reflect at both side
+
+#######################################################################################################################################################
+
+############################################### Persistant VOLUME ########################
+
+Create pv using manifest 
+
+$ vim pv.yaml
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: my-pv
+spec:
+  capacity:
+    storage: 10Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /pv-vol
+	
+	
+
+check created pv 
+
+$ kubectl get pv
+
+now create a claim 
+
+vim pvc.yaml
+
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: myclaim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  volumeMode: Filesystem
+  resources:
+    requests:
+      storage: 10Gi
+	  
+$ kubectl create -f pvc.yaml
+
+$  kubectl get pvc
+
+now you will see the status of pv and pvc will be shown as bound instead of avalible 
+
+
+now create a pod and use claim
+
+vim pod-pvc.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mypod
+spec:
+  containers:
+    - name: myfrontend
+      image: nginx
+      volumeMounts:
+      - mountPath: "/pv-vol"
+        name: my-vol
+  volumes:
+    - name: my-vol
+      persistentVolumeClaim:
+        claimName: myclaim
+
+$ kubectl create -f  pod-pvc.yaml
+
+connect to container
+
+$ df -h # you will see a new disk from local host in container
+
+let go into mount point in container and create data to see if it reflects on local host too
+
+$ cd /pv-vol
+
+$ touch abcd
+
+check on local host now it will reflect 
+
+

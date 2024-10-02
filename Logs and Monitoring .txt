@@ -1,0 +1,30 @@
+########################## Logging and Monitoring ######################
+
+to check the logs of any pod run below command
+
+$ kubectl logs <<pod name>>
+
+
+if pod has multiple container running then you have to specify container name 
+
+kubectl logs multi-container-pod <<container name>>
+
+
+
+#########################Component LOGS #########################
+
+to view logs 
+
+$ journalctl -u kubelet.service
+
+You can also check the logs from a specified time
+
+$ journalctl  --since "2024-08-28 07:30:00"  -u kubelet.service
+
+You can also check logs from a specific time to a specific time 
+
+$ journalctl  --since "2024-08-28 13:40:00" --until "2024-08-28 13:46:00" -u kubelet.service
+
+
+
+

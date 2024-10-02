@@ -1,0 +1,154 @@
+###############################DYANAMIC Volume########################
+
+Make sure that the CSI drive is install within the cluster
+
+Make sure the cluster has the policy to create volumes on 
+
+# Go to Services -> IAM
+# Create a Policy
+# Select JSON tab and copy paste the below JSON
+
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ec2:AttachVolume",
+        "ec2:CreateSnapshot",
+        "ec2:CreateTags",
+        "ec2:CreateVolume",
+        "ec2:DeleteSnapshot",
+        "ec2:DeleteTags",
+        "ec2:DeleteVolume",
+        "ec2:DescribeInstances",
+        "ec2:DescribeSnapshots",
+        "ec2:DescribeTags",
+        "ec2:DescribeVolumes",
+        "ec2:DetachVolume"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+
+# Name: Amazon_EBS_CSI_Driver
+# Description: Policy for EC2 Instances to access Elastic Block Store
+# Click on Create Policy
+
+# Get Worker node IAM Role ARN
+$ kubectl -n kube-system describe configmap aws-auth
+
+Go to Services -> IAM -> Roles - Search for current assigned role and open it - Click on Permissions tab - Click on Attach Policies - Search for Amazon_EBS_CSI_Driver and click on Attach Policy
+
+# Install CSI now (Skip if already installed)
+
+
+
+Now Create claim first
+
+
+$ vim pvc.yaml
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-data
+  annotations:
+    volume.beta.kubernetes.io/storage-class: gp2
+spec:
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+	  
+====================================================================
+
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: efs-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: "gp2"
+  resources:
+    requests:
+      storage: 20Gi
+
+	  
+	  
+$ kubectl create -f pvc.yaml
+
+now verify pvc is created NOTE- it will be in pending state untill you create a pod 
+
+$ kubectl get pvc
+
+now lets create a pod with giving refrece of our newly created PVC
+
+$ vim pod.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-app
+spec:
+  containers:
+  - name: app
+    image: centos
+    command: ["/bin/sh"]
+    args: ["-c", "while true; do echo $(date -u) >> /data/out.txt; sleep 2; done"]
+    volumeMounts:
+    - name: persistent-storage
+      mountPath: /data
+  volumes:
+  - name: persistent-storage
+    persistentVolumeClaim:
+      claimName: efs-claim
+
+		
+$ kubectl create -f pod.yaml
+
+now check the status of pvc it will get bounded 
+
+$ kubectl get pvc
+
+now connect to the container and see the data is being present in specidfied dir 
+
+$ kubectl exec -it efs-app-1 bash
+
+$ cd /data
+
+# cat out
+
+	  
+=====================================================================================================
+
+################################## Volume expansion #########################
+
+You need to make sure the StorageClass you're using has the allowVolumeExpansion
+
+$ kubectl get sc (if already allowVolumeExpansion is true skip below)
+
+$ kubectl edit sc <<sc name>>
+
+add below in yaml output
+
+ allowVolumeExpansion: true
+ 
+check again sc
+
+$ kubectl get sc
+
+next edit the pvc 
+
+$ kubectl edit pvc <<pvc name>>
+
+update the storage value 
+
+now delete or restart the pod 
+ 
+
+ 
+ 

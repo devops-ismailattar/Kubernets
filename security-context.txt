@@ -1,0 +1,36 @@
+################ Security context #######################
+
+connect to any pod and check running procesess you will see that all the process running are owned by root
+
+now lets create Security context
+
+$ vim file.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: security-context-fs
+spec:
+  securityContext:
+    runAsUser: 1000 # pecifies that for any Containers in the Pod, all processes run with user ID 1000
+    runAsGroup: 3000 # specifies the primary group ID of 3000 for all processes within any containers
+    fsGroup: 2000  #The owner for volume /data/demo and any files created in that volume will be Group ID 2000. 
+  volumes:
+  - name: my-vol
+    emptyDir: {}
+  containers:
+  - name: sec-ctx-demo
+    image: busybox:1.28
+    command: [ "sh", "-c", "sleep 1h" ]
+    volumeMounts:
+    - name: my-vol
+      mountPath: /data
+
+
+$ kubectl create -f secrity-pod.yaml
+
+now lets connect to the pod 
+
+create a file or check ps running it will not be owned by root
+
+

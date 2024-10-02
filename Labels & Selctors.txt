@@ -1,0 +1,89 @@
+####################LABLES AND SELECTORS####################
+
+$ kubectl get pod
+
+Create a pod with yaml or using kubectl
+
+$ kubectl run nginx1 --image=nginx
+
+$ kubectl run nginx2 --image=nginx
+
+$ kubectl run nginx3 --image=nginx
+
+Check created pods
+
+$ kubectl get pod
+
+check labels before giving 
+
+kubectl get pod --show-labels
+
+Apply lable to pods
+
+$ kubectl label pod nginx1 env=prod
+
+$ kubectl label pod nginx2 env=uat
+
+$ kubectl label pod nginx3 env=dev
+
+Now check labels are reflecting or not 
+
+kubectl get pod --show-labels
+
+You can serach pod using the label name 
+
+$  kubectl get pod -l env=prod
+
+
+$  kubectl get pod -l env=uat
+
+$  kubectl get pod -l env=dev
+
+give label to all pods in namespace
+
+$ kubectl label pod --all cleint=absli
+
+to remove label from pod 
+
+$ kubectl label pod nginx env-
+
+
+
+################### PROVIDE LABEL USING YAML MANIFEST##############
+
+CREATE MANIFEST YAML USING KUBECTL 
+
+$ kubectl run pod2 --image=nginx --dry-run=client -o yaml > pod1.yaml
+
+vim pod1.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    run: pod
+    env: prod
+  name: pod
+spec:
+  containers:
+  - image: nginx
+    name: pod
+    resources: {}
+  dnsPolicy: ClusterFirst
+  restartPolicy: Always
+status: {}
+
+ADD LABEL UNDER METADATA AS env: prod
+
+CREATE POD USING KUBECTL 
+
+$ kubectl create -f pod1.yaml
+
+$ kubectl get pod --show-labels
+
+
+
+
+
+

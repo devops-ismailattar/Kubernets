@@ -1,0 +1,212 @@
+
+################################# Network Policy #####################################
+
+check the network policy 
+
+$ kubectl get networkpolicy
+
+$   kubectl run pod1 --image=praqma/network-multitool
+$   kubectl run pod2 --image=praqma/network-multitool
+
+
+$ kubectl get pod -o wide
+
+now try pinging pod each other
+
+$ kubectl exec -it pod1 -- ping pod2ip
+											# You will be see pod will able to ping each other 
+$ kubectl exec -it pod2 -- ping pod1ip 
+
+
+add label to the pod you want to isolate 
+
+$ 
+Now Create the network policy for for a perticular pod to isolate (deny inbond outbound communication)
+
+$ vim file.yaml
+---
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: podselector-suspicous
+spec:
+  podSelector:
+    matchLabels:
+      role: suspicious # this should be label name matching to your pod 
+  policyTypes:
+  - Ingress # 
+  - Egress
+### IF YOU WANT TO ISOLATE POD FOR BOTH LIKE INCOMING AND OUTBOND TRAFIC THEN KEEP BOTH RULES INGRESS AND EGRESS
+ 
+$ kubectl create -f file.yaml
+
+$ kubectl get networkpolicy
+
+
+now try pinging to isolate pod from another pod 
+
+$  kubectl exec -it pod2 -- ping pod1IP  (you will not be able to ping bcz pod1 is isolated)
+
+$   kubectl exec -it pod2 -- ping 8.8.8.8 (you will be able to ping)
+
+$  kubectl exec -it pod1 -- ping 8.8.8.8 (you will be able to ping)
+
+
+try deleting policy or label then you will see that u can be able to ping inbound and outbond
+
+
+##################### Ingress From: ####################
+
+create a new pod in a new namespace 
+
+$ kubectl create ns <<namespace name>>
+
+$ kubectl run ext --image=praqma/network-multitool -n ns-1
+
+$  kubectl get pod -o wide -n ns-1
+
+now try ping from this newly created pod to the pod in default ns
+
+$  kubectl exec -it ext -n ns-1 -- ping podIP
+
+Now add label to the pod in default ns
+
+$ kubectl label pod pod1 app=isolate
+
+try pinging pod1 from anywhere , you will see that you are able to ping 
+
+now create netpol
+
+$ vim file.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: ingress-from-ips
+spec:
+  podSelector:
+    matchLabels:
+      app: isolate
+  ingress:
+  - from:
+     - ipBlock:
+        cidr: 192.168.0.0/16 # CIRD range you give access to 
+        except:
+        - 192.168.222.164/32  # IP wich you want block 
+  policyTypes:
+  - Ingress
+
+$ kubectl create -f file.yaml
+
+now check you will now be able to ping pod1 from this perticuler pod which has this ip 192.168.222.164
+
+$  kubectl exec -it ext -n ns-1 -- ping 192.168.222.133
+
+you can also verify ping to google or any other pod from that same pod and you will see that you are able ping 
+
+$  kubectl exec -it ext -n ns-1 -- ping 8.8.8.8
+
+
+####################### Egress To ##############
+
+first try pinging from pod on which you want apply netol to any pod/network
+
+$ kubectl exec -it pod1 -- ping 192.168.222.134
+
+$ vim file.yaml 
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: egress-to-ips
+spec:
+  podSelector:
+    matchLabels:
+      app: isolate # make sure you have this label to pod 
+  egress:
+  - to:
+     - ipBlock:
+        cidr: 192.168.222.164/32 # the IP which you want allow outbound to (exept this the pod will not comunicate to any other network)
+  policyTypes:
+  - Egress
+
+
+$ kubectl create -f file.yaml
+
+now ping google , you will not be able 
+
+$ kubectl exec -it pod1 -- ping 8.8.8.8
+
+now ping to specified IP yaml 
+
+$ kubectl exec -it pod1 -- ping 92.168.222.164
+
+
+############################### Namespace Selector ################# 
+
+
+create namespace
+ 
+$   kubectl create ns ns-2
+
+add label to NS
+
+$ kubectl label ns ns-2 app=isolate
+
+Create new pod in that ns
+
+kubectl run new --image=praqma/network-multitool -n ns-2
+
+add label to pod as well 
+
+$ vim file.yaml
+
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: namespace-selector
+spec:
+  podSelector:
+    matchLabels:
+      env: uat
+  ingress:
+  - from:
+     - namespaceSelector:
+        matchLabels:
+          app: isolate
+       podSelector:
+         matchLabels:
+           app: isolate
+  policyTypes:
+  - Ingress
+  
+$ kubectl exec -it pod2 -- ping <<to pod on which applying netpol>> ## you will be able to ping 
+
+$ kubectl create -f netpol.yaml
+
+now try again  above ping command 
+
+$ kubectl exec -it pod2 -- ping <<to pod on which applying netpol>> ## you will be not able to ping 
+
+now try ping from the specified NS and POD in yaml file which has mentioned selector 
+
+$ kubectl exec -it new -n ns-2 -- ping 192.168.222.133 # you will be able to ping 
+
+now delete the netpol and execute above first command , then you will se , you are able to ping 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

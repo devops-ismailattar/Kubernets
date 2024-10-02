@@ -1,0 +1,75 @@
+
+############### resources Limit ##################
+
+Create a manifest 
+
+$ vim resources-limit.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unit-app
+spec:
+  containers:
+  - name: unit-app
+    image: unit
+    resources:
+      requests:
+        memory: "64Mi"
+        cpu: "250m"
+      limits:
+        memory: "128Mi"
+        cpu: "500m"
+
+
+$ kubectl create -f resources-limit.yaml
+
+NOW POD WILL BE ASSIGNED TO THE NODE WHICH HAS METNIONED AMOUNT OF RESOURCE AVLIBLE
+
+CHECK 
+
+$ kubectl get pod 
+
+you can also verify the resourc deatisl with below command 
+
+$ kubectl describe node ip-172-31-31-251(node name on which pod is assigned)
+
+
+####IF YOUR SPECIFY 8 GB RAM IN RESOURCE LIMIT AND YOUR CLUSTER DOEST HAVE ANY NODE WITH THAT AMMOUNT OF MEMORY THEN POD WILL NOT BE SCEDULED#####
+
+$ vim resources-limit.yaml
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: unit-app
+spec:
+  containers:
+  - name: unit-app
+    image: unit
+    resources:
+      requests:
+        memory: "6400Mi" #(HERE I CHANGE MEMORY AMMOUNT)
+        cpu: "250m"
+      limits:
+        memory: "12800Mi" # HERE I CHANGE MEMORY AMMOUNT)
+        cpu: "500m"
+		
+
+Now see Pod will not be sceduled on any node it will remain is pending state 
+
+$ kubectl get pod
+
+check the events it will show  Insufficient memory. preemption: 0
+
+$ kubectl describe pod unit-app
+
+		
+
+
+
+
+
+
+
+

@@ -1,0 +1,59 @@
+
+Update the repo with Latest version ok kubernates
+
+$ curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.30/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+$ echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.30/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+Unhold kubectl kubeadm kubelet
+
+$ sudo apt-mark unhold kubeadm kubelet kubectl
+
+Update the repo and install updated version 
+
+$ sudo apt-get update
+
+find out the version you want to install 
+
+$ apt-cache madison kubeadm
+
+$ sudo apt-get install -y kubelet=1.28.12-1.1 kubeadm=1.28.12-1.1 kubectl=1.28.12-1.1
+
+check version now 
+
+$ kubeadm version
+
+Verify the upgrade plan:
+
+$ kubeadm upgrade plan
+
+You can now apply the upgrade by executing the following command:
+
+$ kubeadm upgrade apply v1.28.12
+
+
+Now upgrade the worker node
+
+Drain the node
+
+$ kubectl drain <node-to-drain> --ignore-daemonsets
+
+
+$ sudo apt-get update && sudo apt-get install -y kubelet='1.29.x-*' kubectl='1.29.x-*' && \
+
+Restart the kubelet:
+
+$ sudo systemctl daemon-reload
+
+$ sudo systemctl restart kubelet
+
+Call "kubeadm upgrade
+
+$ sudo kubeadm upgrade node
+
+$kubectl uncordon <node-to-uncordon>
+
+
+
+
+

@@ -1,0 +1,178 @@
+################ Authentication ##################
+
+try connecting to k8s cluster using barrer token from pod 
+
+$ cd /run/secrets/kubernetes.io/serviceaccount
+
+$ curl -k https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1 --header "Authorization: Bearer <<token>>"
+
+you will be able to connect 
+
+now try connecting clsuter and check the pod details 
+
+$  curl -k  https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1/namespaces/default/pods --header "Authorization: Bearer <<token>>"
+
+you will get error that pod pods is forbidden: User \"system:serviceaccount:default:my-service\
+
+Now lets create a role to provide access
+
+vim role.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  namespace: default
+  name: pod-reader
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["pods"]
+  verbs: ["get", "watch", "list"]
+  
+
+$ kubectl create -f role.yaml
+
+$ kubectl get role
+
+now you also need to create to binding 
+
+vim binding.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: default
+subjects:
+- kind: User
+  name: jane # "change the username what you want
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role #this must be Role or ClusterRole
+  name: pod-reader # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+  
+$ kubectl create -f binding.yaml
+
+$ kubectl get rolebinding
+
+$ kubectl describe rolebinding
+
+
+now connect to the pod again and try listing pod
+
+
+$ curl -k  https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1/namespaces/default/pods --header "Authorization: Bearer <<token>>"
+
+this time you wont get error and will be able to see pods
+
+
+##########################################################CLUSTER ROLE-BINDING##############################################
+
+delete the role and role binding you created erlier
+
+$ kubectl delete -f role.yaml
+
+$ kubectl delete -f binding.yaml
+
+create cluster role first 
+
+vim cluster-role.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cluster-reader # name you want to specify
+rules:
+- apiGroups: [""]
+  resources: ["pods"] # for which you want to give access like pod, namespace n all
+  verbs: ["list"]     # access for the action you want to give
+  
+$ kubectl create -f cluster-role
+
+$ kubectl get clusterrole | grep cluster-reader
+
+$ kubectl describe clusterrole cluster-reader
+
+now create cluster-role binding 
+
+vim cluster-binding.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cluster-binding
+subjects:
+- kind: User 
+  name: system:serviceaccount:default:my-service # Name is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: cluster-reader # provide the role name
+  apiGroup: rbac.authorization.k8s.io
+
+$ kubectl create -f cluster-binding.yaml
+
+$ kubectl get clusterrolebinding | grep cluster-binding
+
+$ kubectl describe clusterrolebinding cluster-binding
+
+
+now connect to container again and try listing pod from any namespaces/default/pods
+
+$ curl -k  https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1/namespaces/default/pods --header "Authorization: Bearer <<token>>"
+
+
+$ curl -k  https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1/namespace/kube-system/pods --header "Authorization: Bearer <<token>>"
+
+$ curl -k  https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1/namespace/pods --header "Authorization: Bearer <<token>>"
+
+
+you will be able to see all conatin in namespace
+
+
+
+############################################ YOU CAN ALSO GIVE ACCESS USING CLUSTER-ROLE AND CLUSTER BINDING ######################
+
+delete the cluster-role binding you erlier created
+
+create a normal role binding 
+
+$ vim cluster-role-to-role-binding.yaml
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: read-pods
+  namespace: default # (namespace for which you want to give access to
+subjects:
+- kind: User
+  name: system:serviceaccount:default:my-service # "name" is case sensitive
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole #this must be Role or ClusterRole (keep value as ClusterRole)
+  name: cluster-reader # this must match the name of the Role or ClusterRole you wish to bind to
+  apiGroup: rbac.authorization.k8s.io
+  
+
+
+$ kubectl create -f <<yaml name>> 
+
+$ kubectl get rolebindings
+
+now connect to the pod again
+
+$ kubectl exec -it nginx-pod -- bash
+
+now try accesing the pod of the specified namespace in yaml file 
+
+$ curl -k  https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1/namespaces/default/pods --header "Authorization: Bearer <<token>>"
+
+also try listing pod from diffrent namespace and you will not be able to list any pods due to permission issue.
+
+$ curl -k  https://AE7E8221CA44D83BB0F6C3AF51BA493C.gr7.us-east-1.eks.amazonaws.com/api/v1/namespaces/my-namespace/pods --header "Authorization: Bearer <<token>>"
+
+
+
+
+
+

@@ -1,0 +1,127 @@
+
+############################# CREATE A DEPLOYMENT AND ALSO UPDATE APP VERSION ###############################
+
+First check the deployments
+
+$ kubectl get deployments
+
+now create deployment using manifest 
+
+$ vim deployment.yaml
+
+ name: my-deployment
+  labels:
+    app: test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: testing
+  template:
+    metadata:
+      labels:
+        app: testing
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        ports:
+        - containerPort: 80
+
+		
+Create a deployment now
+		
+$  kubectl create -f deployment.yaml
+
+check the deployments
+
+$ kubectl get deployments
+
+it will also create rs and pods , check that as well
+
+$ kubectl get rs
+
+$ kubectl get pod
+
+################UPDATING THE APPLICATION VERSION ######################
+
+open the yaml manifest of current deployemnt 
+
+$ vim deployment.yaml
+
+ name: my-deployment
+  labels:
+    app: test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: testing
+  template:
+    metadata:
+      labels:
+        app: testing
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.14.2  ########(change the version here from nginx to nginx:1.14.2 )
+        ports:
+        - containerPort: 80
+
+
+now apply deployemnt
+
+$ kubectl apply -f deployment.yaml
+
+
+then check replicas as there will be 2 replicas
+
+$ kubectl get rs (YOU WILL SEE THAT THE OLDER PODS ARE BEING DELETED FROM OLD RS AND BEWING CREATED IN NEW RS)
+
+now check the events of deployemnt and also current image of container
+
+$ kubectl describe deployment my-deployment (you will see how pods sclaed up and scaled down from each replica)
+
+
+you can also check the rollout history assocaited with deployemnt
+
+$ kubectl rollout history deployment my-deployment
+
+
+if you want additional information of any rollout history then run below command
+
+$ kubectl rollout history deployment my-deployment --revision "your number"
+
+
+
+########################### ROLLBACK OF DEPLOYMENT ###################
+
+check the rollout history fist
+
+$ kubectl rollout history deployment my-deployment
+
+then choose a revision you want your application rollback to and run below command
+
+$ kubectl rollout undo deployment my-deployment --to-revision=1
+
+check RS status , you will see the defrence
+
+$ kubectl get rs 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		
+		

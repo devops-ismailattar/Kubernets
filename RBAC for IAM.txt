@@ -1,0 +1,81 @@
+
+
+- **AmazonEKSClusterPolicy**
+- **AmazonEKSWorkerNodePolicy**
+- **AmazonEKSServicePolicy**
+ 
+### Step 2: Edit the `aws-auth` ConfigMap
+ 
+1. Run the following command to edit the `aws-auth` ConfigMap:
+   ```bash
+   kubectl edit configmap aws-auth -n kube-system
+   ```
+ 
+2. Add the IAM user to the ConfigMap with appropriate access. Add a new mapUsers entry to the ConfigMap as shown below:
+   ```yaml
+   mapUsers: |
+     - userarn: arn:aws:iam::AWS_ACCOUNT_ID:user/IAM_USER_NAME
+       username: eks-user
+       groups:
+         - eks-users
+   ```
+ 
+Replace `AWS_ACCOUNT_ID` and `IAM_USER_NAME` with the actual values.
+ 
+### Step 3: Create a Role for Listing Pods
+ 
+1. Create an RBAC Role YAML file that grants the permission to list pods in a specific namespace. Here’s an example of the YAML for this role:
+ 
+   ```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+   kind: Role
+   metadata:
+     namespace: your-namespace
+     name: pod-list-role
+   rules:
+   - apiGroups: [""]
+     resources: ["pods"]
+     verbs: ["list"]
+   ```
+ 
+### Step 4: Create a RoleBinding
+ 
+2. Create a RoleBinding to bind the IAM user to this role:
+ 
+   ```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+   kind: RoleBinding
+   metadata:
+     name: pod-list-binding
+     namespace: your-namespace
+   subjects:
+   - kind: User
+     name: eks-user # This should match the 'username' specified in aws-auth configmap
+apiGroup: rbac.authorization.k8s.io
+   roleRef:
+     kind: Role
+     name: pod-list-role
+apiGroup: rbac.authorization.k8s.io
+   ```
+ 
+### Step 5: Apply the YAML Files
+ 
+1. Apply the role:
+   ```bash
+   kubectl apply -f pod-list-role.yaml
+   ```
+ 
+2. Apply the role binding:
+   ```bash
+   kubectl apply -f pod-list-binding.yaml
+   ```
+ 
+### Step 6: Verify Permissions
+ 
+Once the role and role binding are applied, the IAM user should be able to list pods in the specific namespace by using the `kubectl` command:
+ 
+```bash
+kubectl get pods -n your-namespace
+```
+ 
+This will return the list of pods if the permissions are correctly set up.
